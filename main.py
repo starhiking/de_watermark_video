@@ -52,4 +52,13 @@ Wk, Ik, W, alpha1 = solve_images(Jt, W_m, alpha, W)
 # ret, thr = cv2.threshold(W_m_threshold, 127, 255, cv2.THRESH_BINARY)
 
 for i in range(11):
-    cv2.imwrite(os.path.join('resources','watermark','{}.jpg'.format(i+1)), Ik[i])
+    img = cv2.imread((os.path.join('resources','filled','{}.jpg'.format(i+1))))
+    img_rect = img[rect_start[1]:rect_end[1],rect_start[0]:rect_end[0],:]
+    naive_Jt = img_rect[start[0]:(start[0]+end[0]), start[1]:(start[1]+end[1]), :]
+
+    assert naive_Jt.shape == Ik[i].shape , "the size are not equal."
+
+    img_rect[start[0]:(start[0]+end[0]), start[1]:(start[1]+end[1]), :] = Ik[i].copy()
+    
+
+    cv2.imwrite(os.path.join('resources','watermark','{}.jpg'.format(i+1)), img)
