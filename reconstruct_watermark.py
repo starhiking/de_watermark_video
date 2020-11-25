@@ -11,7 +11,7 @@ from estimate_watermark import *
 from closed_form_matting import *
 
 
-def get_cropped_images(foldername, num_images, start, end, shape):
+def get_cropped_images(foldername, num_images, start, end, shape, rect_start, rect_end):
     '''
     This is the part where we get all the images, extract their parts, and then add it to our matrix
     '''
@@ -27,6 +27,7 @@ def get_cropped_images(foldername, num_images, start, end, shape):
     # Iterate over all images
     for i in range(11):
         _img = cv2.imread(os.path.join(foldername,"{}.jpg".format(i+1)))
+        _img = _img[rect_start[1]:rect_end[1],rect_start[0]:rect_end[0],:]
         if _img is not None:
             # estimate the watermark part
             image_paths.append(os.path.join(foldername,"{}.jpg".format(i+1)))
@@ -137,7 +138,7 @@ def estimate_normalized_alpha(J, W_m, num_images=11, threshold=170, invert=False
         imgcopy = thr
         alph = closed_form_matte(J[idx], imgcopy)
         alpha[idx] = alph
-
+    print(alpha.shape)
     alpha = np.median(alpha, axis=0)
     return alpha
 
@@ -176,7 +177,7 @@ def Func_Phi_deriv(X, epsilon=1e-3):
     return 0.5/Func_Phi(X, epsilon)
 
 
-def solve_images(J, W_m, alpha, W_init, gamma=1, beta=1, lambda_w=0.005, lambda_i=1, lambda_a=0.01, iters=4):
+def solve_images(J, W_m, alpha, W_init, gamma=1, beta=1, lambda_w=0.005, lambda_i=1, lambda_a=0.01, iters=1):
     '''
     Master solver, follows the algorithm given in the supplementary.
     W_init: Initial value of W
@@ -199,9 +200,6 @@ def solve_images(J, W_m, alpha, W_init, gamma=1, beta=1, lambda_w=0.005, lambda_
 
     # Iterations
     for _ in range(iters):
-
-        print("------------------------------------")
-        print("Iteration: %d"%(_))
 
         # Step 1
         print("Step 1")

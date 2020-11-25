@@ -1,4 +1,5 @@
 import cv2
+import cv2 as cv
 import glob
 import os
 import math
@@ -9,6 +10,38 @@ from matplotlib import pyplot as plt
 
 
 KERNEL_SIZE = 3
+
+def SetPoints(windowname, img):
+    """
+    输入图片，打开该图片进行标记点，返回的是标记的几个点的字符串
+    """
+    print('(提示：单击需要标记的坐标，Enter确定，Esc跳过，其它重试。)')
+    points = []
+
+    def onMouse(event, x, y, flags, param):
+        if event == cv.EVENT_LBUTTONDOWN:
+            cv.circle(temp_img, (x, y), 5, (102, 217, 239), -1)
+            points.append([x, y])
+            cv.imshow(windowname, temp_img)
+
+    temp_img = img.copy()
+    cv.namedWindow(windowname)
+    cv.imshow(windowname, temp_img)
+    cv.setMouseCallback(windowname, onMouse)
+    key = cv.waitKey(0)
+    if key == 13:  # Enter
+        print('坐标为：', points)
+        del temp_img
+        cv.destroyAllWindows()
+        return np.array(points).reshape(-1,2)
+    elif key == 27:  # ESC
+        print('跳过该张图片')
+        del temp_img
+        cv.destroyAllWindows()
+        return None
+    else:
+        print('重试!')
+        return SetPoints(windowname, img)
 
 
 def estimate_watermark(folder):
@@ -21,12 +54,40 @@ def estimate_watermark(folder):
 		return
 
 	ims = []
-	for img in glob.glob(os.path.join('resources','raw','*.jpg')):
+	rect_start = None
+	rect_end = None
+	get_rect = False
+
+	for img in os.listdir(folder): # glob.glob(os.path.join('resources','raw','*.jpg')):
+		img = os.path.join(folder,img)
 		im = cv2.imread(img)
 		if im is not None:
+			if get_rect:
+				im = im[rect_start[1]:rect_end[1],rect_start[0]:rect_end[0],:]
 			ims.append(im)
 		else:
 			print("[estimate watermark] image {} not exist.".format(img))
+		
+		if not get_rect :
+			points = SetPoints("getPoint",im)
+			if points is None or points.shape[0]<2:
+				continue
+
+			rect_start = np.min(points,0)
+			rect_end = np.max(points,0)
+			get_rect = True
+
+			for i in range(len(ims)):
+				total_img = ims[i]
+				ims[i] = total_img[rect_start[1]:rect_end[1],rect_start[0]:rect_end[0],:]
+
+	for i in range(len(ims)):
+		img = ims[i]
+		cv2.imshow(str(i),img)
+	
+	cv2.waitKey(500)
+	cv.destroyAllWindows()
+
 
 	print("[estimate watermark] compute gradients.")
 	grad_x = list(map(lambda x: cv2.Sobel(x, cv2.CV_64F, 1, 0, ksize=KERNEL_SIZE), ims))
@@ -36,7 +97,7 @@ def estimate_watermark(folder):
 	Wm_x = np.median(np.array(grad_x), axis=0)
 	Wm_y = np.median(np.array(grad_y), axis=0)
 
-	return (Wm_x, Wm_y, grad_x, grad_y)
+	return (Wm_x, Wm_y, grad_x, grad_y, rect_start, rect_end)
 
 
 def PlotImage(image):
@@ -145,6 +206,12 @@ def crop_watermark(gradx, grady, threshold=0.4, boundary_size=2):
 
 	xm, xM = np.min(x) - boundary_size - 1, np.max(x) + boundary_size + 1
 	ym, yM = np.min(y) - boundary_size - 1, np.max(y) + boundary_size + 1
+
+	xm = max(0,xm)
+	ym = max(0,ym)
+	xM = min(xM,gradx.shape[0]-1)
+	yM = min(yM,grady.shape[1]-1)
+
 
 	return gradx[xm:xM, ym:yM, :] , grady[xm:xM, ym:yM, :]
 
