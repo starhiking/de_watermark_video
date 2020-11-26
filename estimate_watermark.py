@@ -43,6 +43,67 @@ def SetPoints(windowname, img):
         print('重试!')
         return SetPoints(windowname, img)
 
+def estimate_watermark_video(video,GAP=50,img_size=256):
+	"""
+	estimate the watermark using, grad(W) = median(grad(J))
+	"""
+	if not os.path.exists(video):
+		print("[estimate watermark] video {} not exist.".format(video))
+		exit(1)
+		return
+
+	cap = cv2.VideoCapture(video)
+
+	index = 0
+	frames = []
+	total_size = img_size * img_size * 3
+	rect_start = None
+	rect_end = None
+	get_rect = False
+
+	while True:
+		result, frame = cap.read()
+		if not result: break
+		index += 1
+
+		if index % GAP is 0:
+			if frame.size > total_size:
+				if img_size > 0 :
+					frame = cv2.resize(frame,(img_size,img_size))
+				if get_rect:
+					frame = frame[rect_start[1]:rect_end[1],rect_start[0]:rect_end[0],:]
+				frames.append(frame)
+			
+			if not get_rect:
+				points = SetPoints("getPoint",frame)
+				if points is None or points.shape[0]<2:
+					continue
+
+				rect_start = np.min(points,0)
+				rect_end = np.max(points,0)
+				get_rect = True
+
+				for i in range(len(frames)):
+					total_img = frames[i]
+					frames[i] = total_img[rect_start[1]:rect_end[1],rect_start[0]:rect_end[0],:]
+
+	for i in range(min(10,len(frames))):
+		show_img = frames[i]
+		cv2.imshow(str(i),show_img)
+
+	cv2.waitKey(500)
+	cv.destroyAllWindows()
+
+	print("[estimate watermark] compute gradients.")
+	grad_x = list(map(lambda x: cv2.Sobel(x, cv2.CV_64F, 1, 0, ksize=KERNEL_SIZE), frames))
+	grad_y = list(map(lambda x: cv2.Sobel(x, cv2.CV_64F, 0, 1, ksize=KERNEL_SIZE), frames))
+
+	print("[estimate watermark] compute median of all gradients.")
+	Wm_x = np.median(np.array(grad_x), axis=0)
+	Wm_y = np.median(np.array(grad_y), axis=0)
+
+	return (Wm_x, Wm_y, grad_x, grad_y, rect_start, rect_end, frames)
+
 
 def estimate_watermark(folder):
 	"""
@@ -64,7 +125,10 @@ def estimate_watermark(folder):
 		if im is not None:
 			if get_rect:
 				im = im[rect_start[1]:rect_end[1],rect_start[0]:rect_end[0],:]
+				if im is []:
+					print(cv2.imread(img).shape)
 			ims.append(im)
+			assert im.shape == ims[0].shape
 		else:
 			print("[estimate watermark] image {} not exist.".format(img))
 		
@@ -81,7 +145,7 @@ def estimate_watermark(folder):
 				total_img = ims[i]
 				ims[i] = total_img[rect_start[1]:rect_end[1],rect_start[0]:rect_end[0],:]
 
-	for i in range(len(ims)):
+	for i in range(min(10,len(ims))):
 		img = ims[i]
 		cv2.imshow(str(i),img)
 	

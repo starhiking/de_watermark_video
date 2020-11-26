@@ -30,7 +30,7 @@ J, img_paths = get_cropped_images(
 Wm = W_m - W_m.min()
 
 # get threshold of W_m for alpha matte estimate
-alph_est = estimate_normalized_alpha(J, Wm)
+alph_est = estimate_normalized_alpha(J, Wm,num_images=num_images)
 alph = np.stack([alph_est, alph_est, alph_est], axis=2)
 C, est_Ik = estimate_blend_factor(J, Wm, alph)
 
@@ -51,14 +51,18 @@ Wk, Ik, W, alpha1 = solve_images(Jt, W_m, alpha, W)
 # W_m_threshold = (255*PlotImage(np.average(W_m, axis=2))).astype(np.uint8)
 # ret, thr = cv2.threshold(W_m_threshold, 127, 255, cv2.THRESH_BINARY)
 
-for i in range(11):
-    img = cv2.imread((os.path.join('resources','filled','{}.jpg'.format(i+1))))
+i = 0
+for img_path in os.listdir(os.path.join('resources','filled')):
+# for i in range(11):
+    # img = cv2.imread((os.path.join('resources','filled','{}.jpg'.format(i+1))))
+    img = cv2.imread(os.path.join('resources','filled', img_path))
     img_rect = img[rect_start[1]:rect_end[1],rect_start[0]:rect_end[0],:]
     naive_Jt = img_rect[start[0]:(start[0]+end[0]), start[1]:(start[1]+end[1]), :]
 
     assert naive_Jt.shape == Ik[i].shape , "the size are not equal."
 
-    img_rect[start[0]:(start[0]+end[0]), start[1]:(start[1]+end[1]), :] = Ik[i].copy()
+    img_rect[start[0]:(start[0]+end[0]), start[1]:(start[1]+end[1]), :] = (PlotImage(Ik[i].copy())*255).astype(np.uint8)
     
 
     cv2.imwrite(os.path.join('resources','watermark','{}.jpg'.format(i+1)), img)
+    i += 1

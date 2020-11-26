@@ -10,6 +10,29 @@ from scipy.sparse import linalg
 from estimate_watermark import *
 from closed_form_matting import *
 
+def get_cropped_images_video(frames, start, end, shape):
+    '''
+    This is the part where we get all the images, extract their parts, and then add it to our matrix
+    '''
+    images_cropped = np.zeros((len(frames),) + shape)
+    # get images
+    # Store all the watermarked images
+    # start, and end are already stored
+    # just crop and store images
+    _s, _e = start, end
+    index = 0
+
+    # Iterate over all images
+    for i in range(len(frames)):
+        _img = frames[i].copy()
+        # estimate the watermark part
+        _img = _img[_s[0]:(_s[0]+_e[0]), _s[1]:(_s[1]+_e[1]), :]
+        # add to list images
+        images_cropped[index, :, :, :] = _img
+        index+=1
+
+    return images_cropped
+
 
 def get_cropped_images(foldername, num_images, start, end, shape, rect_start, rect_end):
     '''
@@ -25,18 +48,18 @@ def get_cropped_images(foldername, num_images, start, end, shape, rect_start, re
     index = 0
 
     # Iterate over all images
-    for i in range(11):
-        _img = cv2.imread(os.path.join(foldername,"{}.jpg".format(i+1)))
+    for img_path in os.listdir(foldername):
+        _img = cv2.imread(os.path.join(foldername,img_path))
         _img = _img[rect_start[1]:rect_end[1],rect_start[0]:rect_end[0],:]
         if _img is not None:
             # estimate the watermark part
-            image_paths.append(os.path.join(foldername,"{}.jpg".format(i+1)))
+            image_paths.append(os.path.join(foldername,img_path))
             _img = _img[_s[0]:(_s[0]+_e[0]), _s[1]:(_s[1]+_e[1]), :]
             # add to list images
             images_cropped[index, :, :, :] = _img
             index+=1
         else:
-            print("%s not found."%(os.path.join(foldername,"{}.jpg".format(i+1))))
+            print("%s not found."%(os.path.join(foldername,img_path)))
 
     return (images_cropped, image_paths)
 
