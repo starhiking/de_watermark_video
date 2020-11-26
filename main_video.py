@@ -92,7 +92,7 @@ while True:
     # naive_Jt = frame[_start_x:_end_x,_start_y:_end_y,:]
     
     # assert naive_Jt.shape == I_rect.shape
-    frame[_start_x:_end_x,_start_y:_end_y,:] = I_rect # (PlotImage(I_rect)*255).astype(np.uint8)
+    frame[_start_x:_end_x,_start_y:_end_y,:] = np.clip(I_rect,0,255).astype(np.uint8) # (PlotImage(I_rect)*255).astype(np.uint8)
 
     writer.write(frame)
     # cv2.imwrite(os.path.join('resources','watermark','{}.jpg'.format(count_frame+1)), frame)
