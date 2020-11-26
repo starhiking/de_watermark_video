@@ -2,6 +2,8 @@
 
 基于[automatic-watermark-detection](https://github.com/rohitrango/automatic-watermark-detection)进行修改和升级。
 
+效果：B2.mp4 -> video/output4.avi 我用腾讯视频可以打开
+
 1. 修改：支持选位置进行去水印 （过滤掉原图冗余位置信息）
 2. 升级：python2 -> python3
 3. 升级：支持视频去水印并保存 （在知乎, B站视频, 好看视频 测试过）
@@ -11,11 +13,12 @@ cmd : `python main_video.py`
     args:
         video: 输入视频地址
         out_video: 输出视频保存地址
-        _GAP: 处理视频帧的频率，越小效果越好速度越慢
+        _GAP: 处理视频帧的频率，越小效果越好速度越慢,最小为1
         img_size: 处理时图片放缩的大小，为0时代表不放缩效果好，但是慢
 
     最好的效果配置是 _GAP=1, img_size=0
-    效果和速度平均是 _GAP=20, img_size=320
+    效果和速度平均是 _GAP=5, img_size=320
+    建议_GAP和img_size 都放小点
 
 cmd: `python main.py`
 
