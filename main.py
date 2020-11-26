@@ -61,8 +61,8 @@ for img_path in os.listdir(os.path.join('resources','filled')):
 
     assert naive_Jt.shape == Ik[i].shape , "the size are not equal."
 
-    img_rect[start[0]:(start[0]+end[0]), start[1]:(start[1]+end[1]), :] = (PlotImage(Ik[i].copy())*255).astype(np.uint8)
-    
+    # 按理应该是加(PlotImage(Ik[i].copy())*255).astype(np.uint8), 但是直接加Ik[i]效果更好...
+    img_rect[start[0]:(start[0]+end[0]), start[1]:(start[1]+end[1]), :] = Ik[i].copy() # (PlotImage(Ik[i].copy())*255).astype(np.uint8)
 
     cv2.imwrite(os.path.join('resources','watermark','{}.jpg'.format(i+1)), img)
     i += 1

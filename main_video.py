@@ -4,8 +4,8 @@ from reconstruct_watermark import *
 
 video = "video\B2.mp4"
 out_video = 'video\\output4.avi'
-_GAP = 50 # frequence
-img_size = 512
+_GAP = 5 # frequence
+img_size = 320
 
 cap = cv2.VideoCapture(video)
 video_fps = cap.get(cv2.CAP_PROP_FPS)
@@ -51,7 +51,7 @@ W = Wm.copy()
 for i in range(3):
     W[:, :, i] /= C[i]
 
-Jt = J[:25]
+Jt = J #[:25]
 # now we have the values of alpha, Wm, J
 # Solve for all images
 Wk, Ik, W, alpha1 = solve_images(Jt, W_m, alpha, W)
@@ -67,13 +67,12 @@ count_frame = 0
 while True:
     result,frame = cap.read()
     if not result: break
-    # if img_size > 0:
-    #     frame = cv2.resize(frame,(img_size,img_size))
+    count_frame += 1
 
     I_rect = Ik[index].copy()
 
-    if index % _GAP is 0:    
-        index+=1
+    if count_frame % _GAP is 0:    
+        index += 1
         
     _start_y = rect_start[0] + start[0]
     _start_x = rect_start[1] + start[1]
@@ -93,11 +92,10 @@ while True:
     # naive_Jt = frame[_start_x:_end_x,_start_y:_end_y,:]
     
     # assert naive_Jt.shape == I_rect.shape
-    frame[_start_x:_end_x,_start_y:_end_y,:] = (PlotImage(I_rect)*255).astype(np.uint8)
+    frame[_start_x:_end_x,_start_y:_end_y,:] = I_rect # (PlotImage(I_rect)*255).astype(np.uint8)
 
     writer.write(frame)
     # cv2.imwrite(os.path.join('resources','watermark','{}.jpg'.format(count_frame+1)), frame)
-    count_frame += 1
 
 cv2.destroyAllWindows()
 cap.release()

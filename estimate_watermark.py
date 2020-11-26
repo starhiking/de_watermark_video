@@ -43,7 +43,7 @@ def SetPoints(windowname, img):
         print('重试!')
         return SetPoints(windowname, img)
 
-def estimate_watermark_video(video,GAP=50,img_size=256):
+def estimate_watermark_video(video,GAP,img_size=256):
 	"""
 	estimate the watermark using, grad(W) = median(grad(J))
 	"""
@@ -64,7 +64,6 @@ def estimate_watermark_video(video,GAP=50,img_size=256):
 	while True:
 		result, frame = cap.read()
 		if not result: break
-		index += 1
 
 		if index % GAP is 0:
 			if frame.size > total_size:
@@ -86,6 +85,8 @@ def estimate_watermark_video(video,GAP=50,img_size=256):
 				for i in range(len(frames)):
 					total_img = frames[i]
 					frames[i] = total_img[rect_start[1]:rect_end[1],rect_start[0]:rect_end[0],:]
+		index += 1
+
 
 	for i in range(min(10,len(frames))):
 		show_img = frames[i]
