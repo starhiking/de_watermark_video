@@ -25,6 +25,8 @@ cmd: `python main.py`
     没有具体调接口,路径信息对应图像文件夹
 
 最终效果其实不如直接用ffmpeg处理, [项目地址](https://github.com/starhiking/delogo).
+
+
 ---
 ## Automatic watermark detection and removal
 This was a project that was built as part of project for CS663 (Digital Image Processing).
